@@ -30,4 +30,4 @@ if (!array_key_exists($http_uri, $routes)) {
 //4. create Object mapping.
 //5. add logic to handle telemetry data (logging)
 //6. add logic to handle session / authorization / authentication
-//
+//7. add api documentation
