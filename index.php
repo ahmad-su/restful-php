@@ -8,18 +8,19 @@ set_exception_handler(function ($e) {
   $error_code = $e->getCode() ?: 500;
   $body = json_encode(["error" => $e->getMessage()]);
   $content_len = strlen($body);
-  header("Content-Length: $content_len");
   header("Content-Type: application/json", true, $error_code);
+  header("Content-Length: $content_len");
   echo json_encode(["error" => $e->getMessage()]);
 });
 
-$http_method = $_SERVER['REQUEST_METHOD'];
-$http_uri = $_SERVER['REQUEST_URI'];
+// $http_method = $_SERVER['REQUEST_METHOD'];
+// $http_uri = $_SERVER['REQUEST_URI'];
 
 $server = new Server();
 $server->addRoute('GET', '/health-check', 'handlers\health_check');
 // $server->addRoute('POST', '/health-check', 'handlers\health_check');
-$server->serve($http_method, $http_uri);
+// $server->serve($http_method, $http_uri);
+$server->serve();
 
 class Server
 {
@@ -41,8 +42,10 @@ class Server
     }
   }
 
-  public function serve(string $method, string $path)
+  public function serve()
   {
+    $method = $_SERVER['REQUEST_METHOD'];
+    $path = $_SERVER['REQUEST_URI'];
 
     if (!array_key_exists($path, $this->routes)) {
       // var_dump($this->routes);
