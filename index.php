@@ -23,7 +23,7 @@ $server->serve($http_method, $http_uri);
 
 class Server
 {
-  public $routes;
+  private $routes;
 
   public function __construct()
   {
