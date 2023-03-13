@@ -1,27 +1,11 @@
 <?php
-require_once __DIR__ . '/src/routes.php';
+require_once __DIR__ . '/lib/framework_xyz/engine.php';
+require_once __DIR__ . '/src/controllers/handlers.php';
 
-set_exception_handler(function ($e) {
-  $error_code = $e->getCode() ?: 500;
-  header("Content-Type: application/json", true, $error_code);
-  echo json_encode(["error" => $e->getMessage()]);
-});
-
-$http_method = $_SERVER['REQUEST_METHOD'];
-$http_uri = $_SERVER['REQUEST_URI'];
-$data = ["health-check" => "OK, We are alive!"];
-$routes = ["/health-check" => ["GET" => "routes\get_health_check"]];
-
-if (!array_key_exists($http_uri, $routes)) {
-  throw new Exception("Unknown endpoint", 404);
-} else {
-  if (!array_key_exists($http_method, $routes[$http_uri])) {
-    throw new Exception("Method not allowed", 400);
-  } else {
-    header("Content-Type: application/json");
-    $routes[$http_uri][$http_method]();
-  }
-}
+$server = new FrameworkXYZ\Server();
+$server->addRoute('GET', '/health-check', 'handlers\health_check');
+$server->addRoute('GET', '/about', 'handlers\about');
+$server->serve();
 
 //TODO: 
 //1. Refactor APP to use OOP paradigm and MVC pattern
