@@ -19,6 +19,9 @@ namespace handlers {
     //and pass it to Response::body function
     //They can craft the body somewhere (e.g. inside views/ folder)
     //and then call it here
-    FrameworkXYZ\Response::body(ContentType::Json, json_encode(['Message' => "It's RESTful"]));
+    $env = FrameworkXYZ\Env::readFile(__DIR__ . '/../../.env');
+    $body = json_encode($env);
+    // FrameworkXYZ\Response::body(ContentType::Json, json_encode(['Message' => "It's RESTful"]));
+    FrameworkXYZ\Response::body(ContentType::Json, $body);
   }
 }

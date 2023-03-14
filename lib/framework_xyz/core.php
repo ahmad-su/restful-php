@@ -7,10 +7,19 @@ namespace FrameworkXYZ {
   class Server
   {
     private $routes;
+    private static $instance;
 
-    public function __construct()
+    private function __construct()
     {
       $this->routes = array();
+    }
+
+    public static function new()
+    {
+      if (!isset(self::$instance)) {
+        self::$instance = new Server();
+      }
+      return self::$instance;
     }
 
     public function addRoute(string $method, string $path, string $handler)
@@ -30,14 +39,19 @@ namespace FrameworkXYZ {
 
         $error_code = $e->getCode() ?: 500;
         $body = json_encode(["error" => $e->getMessage()]);
-        $content_len = strlen($body);
+        // $content_len = strlen($body);
+        // header("Content-Length: $content_len");
+        // echo json_encode(["error" => $e->getMessage()]);
         header("Content-Type: application/json", true, $error_code);
-        header("Content-Length: $content_len");
-        echo json_encode(["error" => $e->getMessage()]);
+        Response::body(ContentType::Json, $body);
       });
 
       $method = $_SERVER['REQUEST_METHOD'];
       $path = $_SERVER['REQUEST_URI'];
+
+      //Remove X-Powered-By header for security
+      header('X-Powered-By:');
+      header_remove('X-Powered-By');
 
       if (!array_key_exists($path, $this->routes)) {
         // var_dump($this->routes);
@@ -61,6 +75,7 @@ namespace FrameworkXYZ {
     case Html;
     case None;
   }
+
   class Response
   {
     public static function body(ContentType $type, string $body)
@@ -74,6 +89,27 @@ namespace FrameworkXYZ {
       $content_length = strlen($body);
       header("Content-Length: $content_length");
       echo $body;
+    }
+  }
+
+  class Env
+  {
+    public static function readFile(string $path): array
+    {
+      if (!is_readable($path)) {
+        throw new \Exception("The 'env' file  can not be reached");
+      }
+      $array = array();
+      $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+      foreach ($lines as $line) {
+        if (strpos(trim($line), '#') === 0) {
+          continue;
+        }
+        list($var, $value) = explode('=', $line, 2);
+        $array[trim($var)] = trim($value);
+      }
+
+      return $array;
     }
   }
 }
