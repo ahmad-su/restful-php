@@ -1,0 +1,42 @@
+services:
+  postgres_db:
+    image: postgres:14.5-bullseye
+    environment:
+      POSTGRES_USER: ${PG_USER}
+      POSTGRES_PASSWORD: ${PG_PASSWD}
+      POSTGRES_DB: ${PG_DB}
+    # The schema.sql is replaced with db migration
+    # volumes:
+      # - ./docker/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - postgres_net
+    restart: unless-stopped
+  
+  # pgadmin:
+  #   image: dpage/pgadmin4:latest
+  #   depends_on:
+  #     - postgres_db
+  #   environment:
+  #     PGADMIN_DEFAULT_EMAIL: ferris@rust.rs
+  #     PGADMIN_DEFAULT_PASSWORD: crab
+  #     PGADMIN_CONFIG_SERVER_MODE: 'False'
+  #   volumes:
+  #     - ./docker/servers.json:/pgadmin4/servers.json
+  #     - ./docker/pgpass:/var/lib/pgadmin/pgpass
+  #   entrypoint: >
+  #     /bin/sh -c "
+  #     chmod 600 /var/lib/pgadmin/pgpass;
+  #     chown pgadmin:pgadmin /var/lib/pgadmin/pgpass;
+  #     /entrypoint.sh
+  #     "
+  #   ports:
+  #     - "5050:80"
+  #   networks:
+  #     - postgres_net
+  #   restart: unless-stopped
+  #
+networks:
+  postgres_net:
+    driver: bridge

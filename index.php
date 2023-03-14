@@ -1,11 +1,12 @@
 <?php
-require_once __DIR__ . '/lib/framework_xyz/engine.php';
+require_once __DIR__ . '/lib/framework_xyz/core.php';
 require_once __DIR__ . '/src/controllers/handlers.php';
 
-$server = new FrameworkXYZ\Server();
+$server = FrameworkXYZ\Server::new();
 $server->addRoute('GET', '/health-check', 'handlers\health_check');
 $server->addRoute('GET', '/about', 'handlers\about');
 $server->serve();
+
 
 //TODO: 
 //1. Refactor APP to use OOP paradigm and MVC pattern
