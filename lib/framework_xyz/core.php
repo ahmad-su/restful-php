@@ -3,6 +3,8 @@
 namespace FrameworkXYZ {
 
   use Exception;
+  use PDO;
+  use PDOException;
 
   class Server
   {
@@ -14,7 +16,7 @@ namespace FrameworkXYZ {
       $this->routes = array();
     }
 
-    public static function new()
+    public static function init()
     {
       if (!isset(self::$instance)) {
         self::$instance = new Server();
@@ -28,7 +30,6 @@ namespace FrameworkXYZ {
         $array = [$method => $handler];
         $this->routes[$path] =  $array;
       } else {
-        // $array = [$path => [$method => $handler]];
         $this->routes[$path][$method] =  $handler;
       }
     }
@@ -39,9 +40,6 @@ namespace FrameworkXYZ {
 
         $error_code = $e->getCode() ?: 500;
         $body = json_encode(["error" => $e->getMessage()]);
-        // $content_len = strlen($body);
-        // header("Content-Length: $content_len");
-        // echo json_encode(["error" => $e->getMessage()]);
         header("Content-Type: application/json", true, $error_code);
         Response::body(ContentType::Json, $body);
       });
@@ -110,6 +108,33 @@ namespace FrameworkXYZ {
       }
 
       return $array;
+    }
+  }
+
+  enum DBVendor
+  {
+    case Postgres;
+    case Mysql;
+  }
+  class DBMan
+  {
+    private static $dbconn;
+
+    public static function init(DBVendor $dbv, string $db_addr, string $db_name, string $db_user, string $db_password, bool $is_persistent = false)
+    {
+      $db_vendor = '';
+      match ($dbv) {
+        DBVendor::Postgres => $db_vendor = 'pgsql',
+        DBVendor::Mysql => $db_vendor = 'mysql',
+      };
+      if (!isset($dbconn)) {
+        try {
+          self::$dbconn = new PDO("$db_vendor:host=$db_addr;dbname= $db_name;", $db_user, $db_password, array(\PDO::ATTR_PERSISTENT => $is_persistent));
+        } catch (PDOException  $e) {
+          throw new Exception("Couldn't connect to database. " . $e->getMessage());
+        }
+      }
+      return self::$dbconn;
     }
   }
 }

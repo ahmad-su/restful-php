@@ -2,9 +2,10 @@
 require_once __DIR__ . '/lib/framework_xyz/core.php';
 require_once __DIR__ . '/src/controllers/handlers.php';
 
-$server = FrameworkXYZ\Server::new();
+$server = FrameworkXYZ\Server::init();
 $server->addRoute('GET', '/health-check', 'handlers\health_check');
-$server->addRoute('GET', '/about', 'handlers\about');
+// $server->addRoute('GET', '/about', 'handlers\about');
+$server->addRoute('GET', '/accounts', 'handlers\account\get_account');
 $server->serve();
 
 
