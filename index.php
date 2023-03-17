@@ -5,7 +5,8 @@ require_once __DIR__ . '/src/controllers/handlers.php';
 $server = FrameworkXYZ\Server::init();
 $server->addRoute('GET', '/health-check', 'handlers\health_check');
 // $server->addRoute('GET', '/about', 'handlers\about');
-$server->addRoute('GET', '/accounts', 'handlers\account\get_account');
+$server->addRoute('POST', '/api/v1/accounts', 'handlers\account\add_account');
+$server->addRoute('GET', '/api/v1/posts', 'handlers\post\get_post');
 $server->serve();
 
 

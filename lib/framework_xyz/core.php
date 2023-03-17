@@ -4,7 +4,7 @@ namespace FrameworkXYZ {
 
   use Exception;
   use PDO;
-  use PDOException;
+  use PDOException;;
 
   class Server
   {
@@ -135,6 +135,11 @@ namespace FrameworkXYZ {
         }
       }
       return self::$dbconn;
+    }
+
+    public static function fetchOneJson(\PDOStatement $query, string $class): string
+    {
+      return trim(json_encode($query->fetchAll(PDO::FETCH_CLASS, $class)), '[]');
     }
   }
 }

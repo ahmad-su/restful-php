@@ -17,27 +17,57 @@ namespace handlers {
   function about()
   {
 
-    global $env;
     //The user can craft their response body (in string) 
     //and pass it to Response::body function
     //They can craft the body somewhere (e.g. inside views/ folder)
     //and then call it here
-    $body = json_encode($env);
-    // FrameworkXYZ\Response::body(ContentType::Json, json_encode(['Message' => "It's RESTful"]));
+    $body = json_encode(["aboutUs" => "We are cool!"]);
     FrameworkXYZ\Response::body(ContentType::Json, $body);
   }
 }
 
 namespace handlers\account {
 
+  require_once __DIR__ . '/../models/object_mapping.php';
+
+  use Exception;
   use FrameworkXYZ;
   use FrameworkXYZ\ContentType;
+  use FrameworkXYZ\DBMan;
 
-  function get_account()
+  function add_account()
   {
     global $db_conn;
     // $db_conn = new \PDO("pgsql:host=localhost;port=5432;dbname=hendz_db;user=hendz;password=hendz123");
-    $query = ($db_conn->query("select * from account;"))->fetchAll();
+    try {
+      $request_body = json_decode(file_get_contents("php://input"));
+    } catch (Exception $e) {
+      throw new Exception("Failed to parse request body. " . $e->getMessage());
+    };
+    $username = $request_body->username;
+    $password = $request_body->password;
+    $email = $request_body->email;
+    // var_dump($request_body);
+    $query = $db_conn->query("insert into account (username, password, email) values ('$username' , '$password', '$email') returning username, email;");
+    $request_body = null;
+    $username = null;
+    $password = null;
+    $email = null;
+    $result = DBMan::fetchOneJson($query, "models\decode\Account");
+    FrameworkXYZ\Response::body(ContentType::Json, $result);
+  }
+}
+
+namespace handlers\post {
+
+  use FrameworkXYZ;
+  use FrameworkXYZ\ContentType;
+
+  function get_post()
+  {
+    global $db_conn;
+    // $db_conn = new \PDO("pgsql:host=localhost;port=5432;dbname=hendz_db;user=hendz;password=hendz123");
+    $query = ($db_conn->query("select * from article where is_published = true;"))->fetchAll();
     // $result = $query->fetchAll();
     FrameworkXYZ\Response::body(ContentType::Json, json_encode($query));
   }
