@@ -142,4 +142,28 @@ namespace FrameworkXYZ {
       return trim(json_encode($query->fetchAll(PDO::FETCH_CLASS, $class)), '[]');
     }
   }
+
+  class MemoryManager
+  {
+    public static function drop(&$var1, &$var2 = null, &$var3 = null, &$var4 = null, &$var5 = null, &$var6 = null, &$var7 = null, &$var8 = null, &$var9 = null, &$var10 = null)
+    {
+      // if (empty($array)) {
+      //   return;
+      // }
+      //
+      // foreach ($array as $var) {
+      //   $var = null;
+      // }
+      $var1 = null;
+      $var2 = null;
+      $var3 = null;
+      $var4 = null;
+      $var5 = null;
+      $var6 = null;
+      $var7 = null;
+      $var8 = null;
+      $var9 = null;
+      $var10 = null;
+    }
+  }
 }
