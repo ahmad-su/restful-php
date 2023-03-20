@@ -116,54 +116,48 @@ namespace FrameworkXYZ {
     case Postgres;
     case Mysql;
   }
-  class DBMan
+  class DBManager
   {
     private static $dbconn;
 
     public static function init(DBVendor $dbv, string $db_addr, string $db_name, string $db_user, string $db_password, bool $is_persistent = false)
     {
-      $db_vendor = '';
-      match ($dbv) {
-        DBVendor::Postgres => $db_vendor = 'pgsql',
-        DBVendor::Mysql => $db_vendor = 'mysql',
+      $db_vendor = match ($dbv) {
+        DBVendor::Postgres => 'pgsql',
+        DBVendor::Mysql => 'mysql',
+        default => 'mysql',
       };
-      if (!isset($dbconn)) {
+      if (!isset(self::$dbconn)) {
         try {
           self::$dbconn = new PDO("$db_vendor:host=$db_addr;dbname= $db_name;", $db_user, $db_password, array(\PDO::ATTR_PERSISTENT => $is_persistent));
         } catch (PDOException  $e) {
-          throw new Exception("Couldn't connect to database. " . $e->getMessage());
+          throw new Exception("Couldn't establish database connection. " . $e->getMessage());
         }
       }
       return self::$dbconn;
     }
 
+    //This is ugly and needs refactoring later
     public static function fetchOneJson(\PDOStatement $query, string $class): string
     {
       return trim(json_encode($query->fetchAll(PDO::FETCH_CLASS, $class)), '[]');
+    }
+    public static function fetchAllJson(\PDOStatement $query, string $class): string
+    {
+      return json_encode($query->fetchAll(PDO::FETCH_CLASS, $class));
     }
   }
 
   class MemoryManager
   {
-    public static function drop(&$var1, &$var2 = null, &$var3 = null, &$var4 = null, &$var5 = null, &$var6 = null, &$var7 = null, &$var8 = null, &$var9 = null, &$var10 = null)
+    public static function drop(array $vars)
     {
-      // if (empty($array)) {
-      //   return;
-      // }
-      //
-      // foreach ($array as $var) {
-      //   $var = null;
-      // }
-      $var1 = null;
-      $var2 = null;
-      $var3 = null;
-      $var4 = null;
-      $var5 = null;
-      $var6 = null;
-      $var7 = null;
-      $var8 = null;
-      $var9 = null;
-      $var10 = null;
+      if (empty($vars)) {
+        return;
+      }
+      foreach ($vars as &$var) {
+        $var = null;
+      }
     }
   }
 }

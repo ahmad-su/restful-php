@@ -33,7 +33,7 @@ namespace handlers\account {
   use Exception;
   use FrameworkXYZ;
   use FrameworkXYZ\ContentType;
-  use FrameworkXYZ\DBMan;
+  use FrameworkXYZ\DBManager;
   use FrameworkXYZ\MemoryManager;
 
   function add_account()
@@ -50,12 +50,12 @@ namespace handlers\account {
     $email = $request_body->email;
     // var_dump($request_body);
     $query = $db_conn->query("insert into account (username, password, email) values ('$username' , '$password', '$email') returning username, email;");
-    MemoryManager::drop($email, $password, $request_body, $username);
-    // var_dump($username);
-    // var_dump($email);
-    // var_dump($password);
-    // var_dump($username);
-    $result = DBMan::fetchOneJson($query, "models\decode\Account");
+    MemoryManager::drop([&$email, &$password, &$request_body, &$username]);
+    // var_dump($username); //should return null
+    // var_dump($email); //should return null
+    // var_dump($password); //should return null
+    // var_dump($username); //should return null
+    $result = DBManager::fetchOneJson($query, "models\decode\Account");
     FrameworkXYZ\Response::body(ContentType::Json, $result);
   }
 }
