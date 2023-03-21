@@ -39,23 +39,18 @@ namespace handlers\account {
   function add_account()
   {
     global $db_conn;
-    // $db_conn = new \PDO("pgsql:host=localhost;port=5432;dbname=hendz_db;user=hendz;password=hendz123");
-    try {
-      $request_body = json_decode(file_get_contents("php://input"));
-    } catch (Exception $e) {
-      throw new Exception("Failed to parse request body. " . $e->getMessage());
-    };
+    $request_body = FrameworkXYZ\Request::parse("models\serialize\Account");
     $username = $request_body->username;
     $password = $request_body->password;
     $email = $request_body->email;
     // var_dump($request_body);
-    $query = $db_conn->query("insert into account (username, password, email) values ('$username' , '$password', '$email') returning username, email;");
+    $query = DBManager::query($db_conn, "insert into account (username, password, email) values ('$username' , '$password', '$email') returning username, email;");
     MemoryManager::drop([&$email, &$password, &$request_body, &$username]);
     // var_dump($username); //should return null
     // var_dump($email); //should return null
     // var_dump($password); //should return null
     // var_dump($username); //should return null
-    $result = DBManager::fetchOneJson($query, "models\decode\Account");
+    $result = DBManager::fetchOneJson($query, "models\deserialize\Account");
     FrameworkXYZ\Response::body(ContentType::Json, $result);
   }
 }

@@ -1,7 +1,7 @@
 <?php
 
 //deserialize
-namespace models\decode {
+namespace models\deserialize {
   class Account
   {
     public string $username;
@@ -19,7 +19,7 @@ namespace models\decode {
 }
 
 //serialize
-namespace models\encode {
+namespace models\serialize {
   class Account
   {
     public string $username;

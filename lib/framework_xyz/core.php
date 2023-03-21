@@ -4,7 +4,8 @@ namespace FrameworkXYZ {
 
   use Exception;
   use PDO;
-  use PDOException;;
+  use PDOException;
+  use ReflectionProperty;;
 
   class Server
   {
@@ -72,8 +73,32 @@ namespace FrameworkXYZ {
     case Json;
     case Html;
     case None;
+    case Xml;
+    case Form;
   }
 
+  class Request
+  {
+    public static function parse(string $class)
+    {
+      $request_body = json_decode(file_get_contents("php://input"));
+      if (is_null($request_body)) {
+        throw new Exception("Failed to parse request body.", 400);
+      }
+
+      $classProps = get_class_vars($class);
+      foreach (array_keys($classProps) as $prop) {
+        if (!property_exists($request_body, $prop)) {
+          throw new Exception("Field '$prop' is missing from request body.", 400);
+        }
+        $reflection = new ReflectionProperty($class, $prop);
+        if (gettype($request_body->$prop) != $reflection->getType()->getName()) {
+          throw new Exception("Field '$prop' is assigned with an unexpected value.", 400);
+        }
+      }
+      return $request_body;
+    }
+  }
   class Response
   {
     public static function body(ContentType $type, string $body)
@@ -81,7 +106,8 @@ namespace FrameworkXYZ {
       match ($type) {
         ContentType::Html => header('Content-type: text/html'),
         ContentType::Json => header('Content-type: application/json'),
-        ContentType::None => header_remove('Content-type')
+        ContentType::None => header_remove('Content-type'),
+        default => header_remove('Content-type')
       };
 
       $content_length = strlen($body);
@@ -116,6 +142,7 @@ namespace FrameworkXYZ {
     case Postgres;
     case Mysql;
   }
+
   class DBManager
   {
     private static $dbconn;
@@ -137,10 +164,19 @@ namespace FrameworkXYZ {
       return self::$dbconn;
     }
 
-    //This is ugly and needs refactoring later
+    public static function query(\PDO $dbconn, string $query): \PDOStatement
+    {
+      try {
+        return $dbconn->query($query);
+      } catch (\PDOException $e) {
+        throw new Exception($e->getMessage(), 400);
+      }
+    }
+
     public static function fetchOneJson(\PDOStatement $query, string $class): string
     {
-      return trim(json_encode($query->fetchAll(PDO::FETCH_CLASS, $class)), '[]');
+      $json = self::fetchAllJson($query, $class);
+      return substr($json, 1, (strlen($json) - 2));
     }
     public static function fetchAllJson(\PDOStatement $query, string $class): string
     {
