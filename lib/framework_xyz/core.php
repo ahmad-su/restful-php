@@ -169,7 +169,10 @@ namespace FrameworkXYZ {
       try {
         return $dbconn->query($query);
       } catch (\PDOException $e) {
-        throw new Exception($e->getMessage(), 400);
+        $messages = explode(':', $e->getMessage());
+        $message = trim($messages[1]) . ". " . trim($messages[4]);
+        $messages = null;
+        throw new Exception($message, 400);
       }
     }
 

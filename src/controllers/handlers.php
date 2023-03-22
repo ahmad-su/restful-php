@@ -30,7 +30,6 @@ namespace handlers\account {
 
   require_once __DIR__ . '/../models/object_mapping.php';
 
-  use Exception;
   use FrameworkXYZ;
   use FrameworkXYZ\ContentType;
   use FrameworkXYZ\DBManager;
