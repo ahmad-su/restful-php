@@ -1,10 +1,15 @@
 <?php
+
+use FrameworkXYZ\Server;
+
 require_once __DIR__ . '/lib/framework_xyz/core.php';
 require_once __DIR__ . '/src/controllers/handlers.php';
 
-$server = FrameworkXYZ\Server::new();
+$server = Server::init();
 $server->addRoute('GET', '/health-check', 'handlers\health_check');
 $server->addRoute('GET', '/about', 'handlers\about');
+$server->addRoute('POST', '/api/v1/accounts', 'handlers\accounts\POST');
+$server->addRoute('GET', '/api/v1/posts', 'handlers\posts\GET');
 $server->serve();
 
 

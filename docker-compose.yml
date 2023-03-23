@@ -2,9 +2,9 @@ services:
   postgres_db:
     image: postgres:14.5-bullseye
     environment:
-      POSTGRES_USER: ${PG_USER}
-      POSTGRES_PASSWORD: ${PG_PASSWD}
-      POSTGRES_DB: ${PG_DB}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWD}
+      POSTGRES_DB: ${DB_NAME}
     # The schema.sql is replaced with db migration
     # volumes:
       # - ./docker/schema.sql:/docker-entrypoint-initdb.d/schema.sql
