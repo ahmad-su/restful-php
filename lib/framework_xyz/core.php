@@ -25,13 +25,13 @@ namespace FrameworkXYZ {
       return self::$instance;
     }
 
-    public function addRoute(string $method, string $path, string $handler)
+    public function addRoute(string $method, string $uri, string $handler)
     {
-      if (!array_key_exists($path, $this->routes)) {
+      if (!array_key_exists($uri, $this->routes)) {
         $array = [$method => $handler];
-        $this->routes[$path] =  $array;
+        $this->routes[$uri] =  $array;
       } else {
-        $this->routes[$path][$method] =  $handler;
+        $this->routes[$uri][$method] =  $handler;
       }
     }
 
@@ -39,30 +39,30 @@ namespace FrameworkXYZ {
     {
       set_exception_handler(function ($e) {
 
-        $error_code = $e->getCode() ?: 500;
+        $error_code = $e->getCode() ?? 500;
         $body = json_encode(["error" => $e->getMessage()]);
         header("Content-Type: application/json", true, $error_code);
         Response::body(ContentType::Json, $body);
       });
 
       $method = $_SERVER['REQUEST_METHOD'];
-      $path = $_SERVER['REQUEST_URI'];
+      $uri = $_SERVER['REQUEST_URI'];
 
       //Remove X-Powered-By header for security
       header('X-Powered-By:');
       header_remove('X-Powered-By');
 
-      if (!array_key_exists($path, $this->routes)) {
+      if (!array_key_exists($uri, $this->routes)) {
         // var_dump($this->routes);
         throw new Exception("Unknown endpoint", 404);
       } else {
-        if (!array_key_exists($method, $this->routes[$path])) {
+        if (!array_key_exists($method, $this->routes[$uri])) {
           // var_dump($this->routes);
           throw new Exception("Method not allowed", 400);
         } else {
           header("Content-type: application/json");
           // var_dump($this->routes);
-          $this->routes[$path][$method]();
+          $this->routes[$uri][$method]();
         }
       }
     }
@@ -79,6 +79,25 @@ namespace FrameworkXYZ {
 
   class Request
   {
+    public static function get_client_ip()
+    {
+      $client_address = [
+        $_SERVER['HTTP_CLIENT_IP'] ?? NULL,
+        $_SERVER['HTTP_X_FORWARDED_FOR'] ?? NULL,
+        $_SERVER['HTTP_X_FORWARDED'] ?? NULL,
+        $_SERVER['HTTP_FORWARDED_FOR'] ?? NULL,
+        $_SERVER['HTTP_FORWARDED'] ?? NULL,
+        $_SERVER['REMOTE_ADDR'] ?? NULL
+      ];
+      foreach ($client_address as $ip_addr) {
+        if (isset($ip_addr)) {
+          return $ip_addr;
+        }
+      }
+      $client_address = NULL;
+      return 'UNKNOWN';
+    }
+
     public static function parse(string $class)
     {
       $request_body = json_decode(file_get_contents("php://input"));
@@ -118,13 +137,13 @@ namespace FrameworkXYZ {
 
   class Env
   {
-    public static function readFile(string $path): array
+    public static function readFile(string $file_path): array
     {
-      if (!is_readable($path)) {
+      if (!is_readable($file_path)) {
         throw new \Exception("The 'env' file  can not be reached");
       }
       $array = array();
-      $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+      $lines = file($file_path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
       foreach ($lines as $line) {
         if (strpos(trim($line), '#') === 0) {
           continue;
@@ -196,6 +215,18 @@ namespace FrameworkXYZ {
       }
       foreach ($vars as &$var) {
         $var = null;
+      }
+    }
+  }
+
+  class Security
+  {
+    public static function allow_address(array $addr)
+    {
+
+      $client_ip = Request::get_client_ip();
+      if (!in_array($client_ip, $addr)) {
+        throw new Exception("You are not allowed to perform this request.", 403);
       }
     }
   }
