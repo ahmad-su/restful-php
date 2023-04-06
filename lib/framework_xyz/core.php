@@ -27,6 +27,15 @@ namespace FrameworkXYZ {
 
     public function addRoute(string $method, string $uri, string $handler)
     {
+      //escape special char (add backslash)
+      $uri = preg_replace("/\//", "\\/", $uri);
+
+      //if uri contain dynamic path: e.g {any}
+      //replace any {value} in the uri to regex pattern to match its value e.g: 123 in "/path/123/path"
+      if (preg_match("/(\{[a-zA-Z0-9-_]{1,255}\})/", $uri)) {
+        $uri = preg_replace("/(\{[a-zA-Z0-9-_]{1,255}\})/", "([a-zA-Z0-9-_]{1,255})", $uri);
+      }
+
       if (!array_key_exists($uri, $this->routes)) {
         $array = [$method => $handler];
         $this->routes[$uri] =  $array;
@@ -52,18 +61,56 @@ namespace FrameworkXYZ {
       header('X-Powered-By:');
       header_remove('X-Powered-By');
 
-      if (!array_key_exists($uri, $this->routes)) {
-        // var_dump($this->routes);
-        throw new Exception("Unknown endpoint", 404);
-      } else {
-        if (!array_key_exists($method, $this->routes[$uri])) {
-          // var_dump($this->routes);
-          throw new Exception("Method not allowed", 400);
-        } else {
-          header("Content-type: application/json");
-          // var_dump($this->routes);
-          $this->routes[$uri][$method]();
+      $route_found = false;
+      foreach (array_keys($this->routes) as $route) {
+        if (preg_match("/$route\z/", $uri)) {
+          $route_found = true;
+          // echo "Success !!!";
+          // var_dump($routes[$route]);
+          //TODO: Add logic to parse dynamic path value
+          //PLAN: split static paths from the uri and then craft new regex to parse the dynamics
+          $dyn_expr_sign = "/(\(\[a-zA-Z0-9-_\]\{1,255\}\))/";
+          $static_paths = array();
+          $dyn_values = array();
+          if (preg_match($dyn_expr_sign, $route)) {
+            $static_paths = preg_split($dyn_expr_sign, $route);
+            //add () to each static path
+            //I just amazed php has closure :D
+            $static_paths = array_map(fn ($str): string => "(" . $str . ")", $static_paths);
+            //craft the expr that we will use to extract dynamic paths
+            $extractor_expr = '';
+            for ($i = 0; $i < count($static_paths); $i++) {
+              if ($i + 1 == count($static_paths)) {
+                $extractor_expr .= "$static_paths[$i]";
+              } else {
+                $extractor_expr .= "$static_paths[$i]|";
+              }
+            }
+            // echo "\r\n$extractor_expr\r\n";
+            $dyn_values = preg_split("/(?:$extractor_expr)/", $uri);
+            // var_dump($dyn_paths);
+
+            $dyn_values = array_values(array_filter($dyn_values));
+
+            // var_dump($static_paths);
+            // var_dump($dyn_paths);
+          }
+          if (!array_key_exists($method, $this->routes[$route])) {
+            // var_dump($this->routes);
+            throw new Exception("Method not allowed", 400);
+          } else {
+            header("Content-type: application/json");
+            // var_dump($this->routes);
+            if (!is_null($dyn_values)) {
+
+              $this->routes[$route][$method]($dyn_values);
+            }
+            $this->routes[$route][$method]();
+          }
         }
+      }
+      if (!$route_found) {
+        throw new Exception("Unknown endpoint", 404);
       }
     }
   }
@@ -82,19 +129,19 @@ namespace FrameworkXYZ {
     public static function get_client_ip()
     {
       $client_address = [
-        $_SERVER['HTTP_CLIENT_IP'] ?? NULL,
-        $_SERVER['HTTP_X_FORWARDED_FOR'] ?? NULL,
-        $_SERVER['HTTP_X_FORWARDED'] ?? NULL,
-        $_SERVER['HTTP_FORWARDED_FOR'] ?? NULL,
-        $_SERVER['HTTP_FORWARDED'] ?? NULL,
-        $_SERVER['REMOTE_ADDR'] ?? NULL
+        $_SERVER['HTTP_CLIENT_IP'] ?? null,
+        $_SERVER['HTTP_X_FORWARDED_FOR'] ?? null,
+        $_SERVER['HTTP_X_FORWARDED'] ?? null,
+        $_SERVER['HTTP_FORWARDED_FOR'] ?? null,
+        $_SERVER['HTTP_FORWARDED'] ?? null,
+        $_SERVER['REMOTE_ADDR'] ?? null
       ];
       foreach ($client_address as $ip_addr) {
         if (isset($ip_addr)) {
           return $ip_addr;
         }
       }
-      $client_address = NULL;
+      $client_address = null;
       return 'UNKNOWN';
     }
 
